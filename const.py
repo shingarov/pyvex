@@ -4,15 +4,17 @@ from . import VEXObject, ffi, pvc
 from .enums import get_enum_from_int
 from .errors import PyVEXError
 
+from claripy import ast
+
 
 # IRConst hierarchy
 class IRConst(VEXObject):
 
     __slots__ = ['_value']
 
-    type = None
-    tag = None
-    c_constructor = None
+    #type = None
+    #tag = None
+    #c_constructor = None
 
     def pp(self):
         print(self.__str__())
@@ -118,6 +120,19 @@ class U16(IRConst):
 _U16_POOL = [ U16(i) for i in range(1024) ] + [ U16(i) for i in range(0xfc00, 0xffff + 1) ]
 
 
+class UN(IRConst):
+    __slots__ = [ 'type', 'tag', 'op_format' ]
+
+    def __init__(self, value):
+        self._value = value
+        self.op_format = str(value.size())
+        self.type = 'Ity_I' + self.op_format
+        self.tag = 'Ico_U' + self.op_format
+
+    def __str__(self):
+        return str(self.value)
+
+
 class U32(IRConst):
     __slots__ = [ ]
 
@@ -130,6 +145,8 @@ class U32(IRConst):
         self._value = value
 
     def __str__(self):
+        if isinstance(self.value, ast.base.Base):
+            return str(self.value)
         return "0x%08x" % self.value
 
     @staticmethod
